@@ -13,10 +13,15 @@ class bkbase;
 class ImageProc;
 
 using bytearray = std::vector<unsigned char>;
+#ifdef OP_STATIC
+#define OP_API
+#pragma message("----------------当前生成静态版本OP----------------")
+#else
 #if defined(OP_EXPORTS)
 #define OP_API __declspec(dllexport)
 #else
 #define OP_API __declspec(dllimport)
+#endif
 #endif
 // libop
 
