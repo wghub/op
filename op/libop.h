@@ -74,6 +74,8 @@ public:
 	//--------------------windows api------------------------------
 	//根据指定条件,枚举系统中符合条件的窗口
 	long EnumWindow(long parent, const wchar_t* title, const wchar_t* class_name, long filter, std::wstring& retstr);
+	//根据指定进程pid,枚举系统中符合条件的窗口
+	long EnumWindowByProcessId(long process_id, const wchar_t* title, const wchar_t* class_name, long filter, std::wstring& retstring);
 	//根据指定进程以及其它条件,枚举系统中符合条件的窗口
 	long EnumWindowByProcess(const wchar_t* process_name, const wchar_t* title, const wchar_t* class_name, long filter, std::wstring& retstring);
 	//根据指定进程名,枚举系统中符合条件的进程PID

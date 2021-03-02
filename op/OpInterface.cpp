@@ -133,6 +133,17 @@ STDMETHODIMP OpInterface::EnumWindow(LONG parent, BSTR title, BSTR class_name, L
 	return hr;
 }
 
+STDMETHODIMP OpInterface::EnumWindowByProcessId(LONG process_id, BSTR title, BSTR class_name, LONG filter, BSTR* retstring)
+{
+	wstring s;
+	obj.EnumWindowByProcessId(process_id, title, class_name, filter, s);
+
+	CComBSTR newbstr;
+	newbstr.Append(s.data());
+	newbstr.CopyTo(retstring);
+	return S_OK;
+}
+
 STDMETHODIMP OpInterface::EnumWindowByProcess(BSTR process_name, BSTR title, BSTR class_name, LONG filter, BSTR* retstring)
 {
 	wstring s;
