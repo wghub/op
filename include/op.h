@@ -138,6 +138,13 @@ EXTERN_C const IID IID_IOpInterface;
             /* [in] */ LONG endY,
             /* [retval][out] */ BSTR *path) = 0;
         
+        virtual /* [id] */ HRESULT STDMETHODCALLTYPE EnumWindowByProcessId( 
+            /* [in] */ LONG process_id,
+            /* [in] */ BSTR title,
+            /* [in] */ BSTR class_name,
+            /* [in] */ LONG filter,
+            /* [retval][out] */ BSTR *retstring) = 0;
+        
         virtual /* [id] */ HRESULT STDMETHODCALLTYPE EnumWindow( 
             /* [in] */ LONG parent,
             /* [in] */ BSTR title,
@@ -753,6 +760,14 @@ EXTERN_C const IID IID_IOpInterface;
             /* [in] */ LONG endX,
             /* [in] */ LONG endY,
             /* [retval][out] */ BSTR *path);
+        
+        /* [id] */ HRESULT ( STDMETHODCALLTYPE *EnumWindowByProcessId )( 
+            IOpInterface * This,
+            /* [in] */ LONG process_id,
+            /* [in] */ BSTR title,
+            /* [in] */ BSTR class_name,
+            /* [in] */ LONG filter,
+            /* [retval][out] */ BSTR *retstring);
         
         /* [id] */ HRESULT ( STDMETHODCALLTYPE *EnumWindow )( 
             IOpInterface * This,
@@ -1409,6 +1424,9 @@ EXTERN_C const IID IID_IOpInterface;
 
 #define IOpInterface_AStarFindPath(This,mapWidth,mapHeight,disable_points,beginX,beginY,endX,endY,path)	\
     ( (This)->lpVtbl -> AStarFindPath(This,mapWidth,mapHeight,disable_points,beginX,beginY,endX,endY,path) ) 
+
+#define IOpInterface_EnumWindowByProcessId(This,process_id,title,class_name,filter,retstring)	\
+    ( (This)->lpVtbl -> EnumWindowByProcessId(This,process_id,title,class_name,filter,retstring) ) 
 
 #define IOpInterface_EnumWindow(This,parent,title,class_name,filter,retstr)	\
     ( (This)->lpVtbl -> EnumWindow(This,parent,title,class_name,filter,retstr) ) 

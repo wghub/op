@@ -204,6 +204,17 @@ long  libop::EnumWindow(long parent, const wchar_t* title, const wchar_t* class_
 	return 0;
 }
 
+long libop::EnumWindowByProcessId(long process_id, const wchar_t* title, const wchar_t* class_name, long filter, std::wstring& retstring)
+{
+	std::unique_ptr<wchar_t> retstr(new wchar_t[MAX_PATH * 200]);
+	memset(retstr.get(), 0, sizeof(wchar_t) * MAX_PATH * 200);
+	_winapi->EnumWindow((HWND)0, title, class_name, filter, retstr.get(), 0, process_id);
+	//*retstring=_bstr_t(retstr);
+
+	retstring = retstr.get();
+	return S_OK;
+}
+
 long  libop::EnumWindowByProcess(const wchar_t* process_name, const wchar_t* title, const wchar_t* class_name, long filter, std::wstring& retstring)
 {
 	// TODO: 在此添加实现代码

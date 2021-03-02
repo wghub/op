@@ -98,6 +98,8 @@ public:
 	//--------------------windows api------------------------------
 	//根据指定条件,枚举系统中符合条件的窗口
 	STDMETHOD(EnumWindow)(LONG parent, BSTR title, BSTR class_name, LONG filter, BSTR* retstr);
+	//根据指定进程Id以及其它条件,枚举系统中符合条件的窗口
+	STDMETHOD(EnumWindowByProcessId)(LONG process_id, BSTR title, BSTR class_name, LONG filter, BSTR* retstring);
 	//根据指定进程以及其它条件,枚举系统中符合条件的窗口
 	STDMETHOD(EnumWindowByProcess)(BSTR process_name, BSTR title, BSTR class_name, LONG filter, BSTR* retstring);
 	//根据指定进程名,枚举系统中符合条件的进程PID

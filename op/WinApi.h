@@ -14,7 +14,7 @@ public:
 	DWORD WindowVerion;
 	DWORD IsEuemprosuccess;
 	DWORD npid[MAX_PATH];
-	bool EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_name, LONG filter, wchar_t *retstring, const wchar_t  *process_name = NULL);
+	bool EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_name, LONG filter, wchar_t *retstring, const wchar_t  *process_name = NULL,long process_id = 0);
 	bool EnumWindowSuper(wchar_t *spec1, LONG flag1, LONG type1, wchar_t *spec2, LONG flag2, LONG type2, LONG sort, wchar_t *retstring = NULL);
 	bool EnumProcess(const wchar_t *name, wchar_t *retstring);
 	bool ClientToScreen(LONG hwnd, LONG &x, LONG &y);

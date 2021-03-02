@@ -296,7 +296,7 @@ DWORD  WinApi::FindChildWnd(HWND hchile, const wchar_t *title, const wchar_t *cl
 //16 : Æ¥Åä¿É¼ûµÄ´°¿Ú
 //
 //32 : Æ¥Åä³öµÄ´°¿Ú°´ÕÕ´°¿Ú´ò¿ªË³ÐòÒÀ´ÎÅÅÁÐ
-bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_name, LONG filter, wchar_t *retstring, const wchar_t  *process_name)
+bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_name, LONG filter, wchar_t *retstring, const wchar_t  *process_name, long process_id)
 {
 	bool bret = false;
 	bool bZwindow = false;//Æ¥Åä³öµÄ´°¿Ú°´ÕÕ´°¿Ú´ò¿ªË³ÐòÒÀ´ÎÅÅÁÐ
@@ -322,6 +322,7 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 			return false;
 	}
 
+ 
 	DWORD processpid = 0;
 	retstringlen = 0;
 	switch (filter)
@@ -340,19 +341,42 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 		p = ::GetWindow(p, GW_HWNDFIRST);
 		while (p != NULL)
 		{
-			if (retstringlen == 0)
-				retstringlen = wcslen(retstring);
-			if (retstringlen > 1)
-				swprintf(retstring, L"%s,%d", retstring, p);
-			else
-				swprintf(retstring, L"%d", p);
-			bret = true;
-			HWND hchile = ::GetWindow(p, GW_CHILD);
-			if (hchile != NULL)
+			if (process_id)
 			{
-				FindChildWnd(hchile, NULL, NULL, retstring);
+				DWORD pid = 0;
+				GetWindowThreadProcessId(p, &pid);
+				if (pid == process_id)
+				{
+					if (retstringlen == 0)
+						retstringlen = wcslen(retstring);
+					if (retstringlen > 1)
+						swprintf(retstring, L"%s,%d", retstring, p);
+					else
+						swprintf(retstring, L"%d", p);
+					bret = true;
+					HWND hchile = ::GetWindow(p, GW_CHILD);
+					if (hchile != NULL)
+					{
+						FindChildWnd(hchile, title, NULL, retstring);
+					}
+				}
 			}
+			else
+			{
 
+				if (retstringlen == 0)
+					retstringlen = wcslen(retstring);
+				if (retstringlen > 1)
+					swprintf(retstring, L"%s,%d", retstring, p);
+				else
+					swprintf(retstring, L"%d", p);
+				bret = true;
+				HWND hchile = ::GetWindow(p, GW_CHILD);
+				if (hchile != NULL)
+				{
+					FindChildWnd(hchile, NULL, NULL, retstring);
+				}
+			}
 			p = ::GetWindow(p, GW_HWNDNEXT);   //»ñÈ¡ÏÂÒ»¸ö´°¿Ú
 		}
 		break;
@@ -369,6 +393,8 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 		{
 			wchar_t WindowTitle[MAX_PATH] = { 0 };
 			::GetWindowText(p, WindowTitle, MAX_PATH);
+			OutputDebugStringW(WindowTitle);
+			
 			if (wcslen(WindowTitle) > 1)
 			{
 				wchar_t *strfind = wcsstr(WindowTitle, title);   //Ä£ºýÆ¥Åä
@@ -389,8 +415,29 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 							bret = true;
 						}
 					}
+					else if (process_id)
+					{
+						DWORD pid = 0;
+						GetWindowThreadProcessId(p, &pid);
+						if (pid == process_id) 
+						{
+							if (retstringlen == 0)
+								retstringlen = wcslen(retstring);
+							if (retstringlen > 1)
+								swprintf(retstring, L"%s,%d", retstring, p);
+							else
+								swprintf(retstring, L"%d", p);
+							bret = true;
+							HWND hchile = ::GetWindow(p, GW_CHILD);
+							if (hchile != NULL)
+							{
+								FindChildWnd(hchile, title, NULL, retstring);
+							}
+						}
+					}
 					else
 					{
+ 
 						if (retstringlen == 0)
 							retstringlen = wcslen(retstring);
 						if (retstringlen > 1)
@@ -441,6 +488,26 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 							else
 								swprintf(retstring, L"%d", p);
 							bret = true;
+						}
+					}
+					else if (process_id)
+					{
+						DWORD pid = 0;
+						GetWindowThreadProcessId(p, &pid);
+						if (pid == process_id)
+						{
+							if (retstringlen == 0)
+								retstringlen = wcslen(retstring);
+							if (retstringlen > 1)
+								swprintf(retstring, L"%s,%d", retstring, p);
+							else
+								swprintf(retstring, L"%d", p);
+							bret = true;
+							HWND hchile = ::GetWindow(p, GW_CHILD);
+							if (hchile != NULL)
+							{
+								FindChildWnd(hchile, title, NULL, retstring);
+							}
 						}
 					}
 					else
@@ -497,6 +564,26 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 							else
 								swprintf(retstring, L"%d", p);
 							bret = true;
+						}
+					}
+					else if (process_id)
+					{
+						DWORD pid = 0;
+						GetWindowThreadProcessId(p, &pid);
+						if (pid == process_id)
+						{
+							if (retstringlen == 0)
+								retstringlen = wcslen(retstring);
+							if (retstringlen > 1)
+								swprintf(retstring, L"%s,%d", retstring, p);
+							else
+								swprintf(retstring, L"%d", p);
+							bret = true;
+							HWND hchile = ::GetWindow(p, GW_CHILD);
+							if (hchile != NULL)
+							{
+								FindChildWnd(hchile, title, class_name, retstring);
+							}
 						}
 					}
 					else
@@ -561,6 +648,26 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 						}
 					}
 
+				}
+			}
+			else if (process_id)
+			{
+				DWORD pid = 0;
+				GetWindowThreadProcessId(p, &pid);
+				if (pid == process_id)
+				{
+					if (retstringlen == 0)
+						retstringlen = wcslen(retstring);
+					if (retstringlen > 1)
+						swprintf(retstring, L"%s,%d", retstring, p);
+					else
+						swprintf(retstring, L"%d", p);
+					bret = true;
+					HWND hchile = ::GetWindow(p, GW_CHILD);
+					if (hchile != NULL)
+					{
+						FindChildWnd(hchile, NULL, NULL, retstring, false, false, process_name);
+					}
 				}
 			}
 			else
@@ -631,6 +738,29 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 				}
 
 			}
+			else if (process_id)
+			{
+				DWORD pid = 0;
+				GetWindowThreadProcessId(p, &pid);
+				if (pid == process_id)
+				{
+					wchar_t WindowTitle[MAX_PATH] = { 0 };
+					::GetWindowText(p, WindowTitle, MAX_PATH);
+					if (wcslen(WindowTitle) > 1)
+					{
+						if (wcsstr(WindowTitle, title))
+						{
+							if (retstringlen == 0)
+								retstringlen = wcslen(retstring);
+							if (retstringlen > 1)
+								swprintf(retstring, L"%s,%d", retstring, p);
+							else
+								swprintf(retstring, L"%d", p);
+							bret = true;
+						}
+					}
+				}
+			}
 			else
 			{
 				wchar_t WindowTitle[MAX_PATH] = { 0 };
@@ -699,6 +829,29 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 					if (hchile != NULL)
 					{
 						FindChildWnd(hchile, NULL, class_name, retstring, false, false, process_name);
+					}
+				}
+			}
+			else if (process_id)
+			{
+				DWORD pid = 0;
+				GetWindowThreadProcessId(p, &pid);
+				if (pid == process_id)
+				{
+					wchar_t WindowClassName[MAX_PATH] = { 0 };
+					::GetClassName(p, WindowClassName, MAX_PATH);
+					if (wcslen(WindowClassName) > 1)
+					{
+						if (wcsstr(WindowClassName, class_name))
+						{
+							if (retstringlen == 0)
+								retstringlen = wcslen(retstring);
+							if (retstringlen > 1)
+								swprintf(retstring, L"%s,%d", retstring, p);
+							else
+								swprintf(retstring, L"%d", p);
+							bret = true;
+						}
 					}
 				}
 			}
@@ -776,6 +929,33 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 					}
 				}
 			}
+			else if (process_id)
+			{
+				DWORD pid = 0;
+				GetWindowThreadProcessId(p, &pid);
+				if (pid == process_id)
+				{
+					wchar_t WindowClassName[MAX_PATH] = { 0 };
+					::GetClassName(p, WindowClassName, MAX_PATH);
+					wchar_t WindowTitle[MAX_PATH] = { 0 };
+					::GetWindowText(p, WindowTitle, MAX_PATH);
+					if (wcslen(WindowClassName) > 1 && wcslen(WindowTitle) > 1)
+					{
+						wchar_t* strfindclass = wcsstr(WindowClassName, class_name);   //Ä£ºýÆ¥Åä
+						wchar_t* strfindtitle = wcsstr(WindowTitle, title);   //Ä£ºýÆ¥Åä
+						if (strfindclass && strfindtitle)
+						{
+							if (retstringlen == 0)
+								retstringlen = wcslen(retstring);
+							if (retstringlen > 1)
+								swprintf(retstring, L"%s,%d", retstring, p);
+							else
+								swprintf(retstring, L"%d", p);
+							bret = true;
+						}
+					}
+				}
+			}
 			else
 			{
 				wchar_t WindowClassName[MAX_PATH] = { 0 };
@@ -830,6 +1010,26 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 						if (hchile != NULL)
 						{
 							FindChildWnd(hchile, NULL, NULL, retstring, true, false, process_name);
+						}
+					}
+				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						if (retstringlen == 0)
+							retstringlen = wcslen(retstring);
+						if (retstringlen > 1)
+							swprintf(retstring, L"%s,%d", retstring, p);
+						else
+							swprintf(retstring, L"%d", p);
+						bret = true;
+						HWND hchile = ::GetWindow(p, GW_CHILD);
+						if (hchile != NULL)
+						{
+							FindChildWnd(hchile, NULL, NULL, retstring, true);
 						}
 					}
 				}
@@ -891,6 +1091,35 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 						if (hchile != NULL)
 						{
 							FindChildWnd(hchile, title, NULL, retstring, true, false, process_name);
+						}
+					}
+				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						wchar_t WindowTitle[MAX_PATH] = { 0 };
+						::GetWindowText(p, WindowTitle, MAX_PATH);
+						if (wcslen(WindowTitle) > 1)
+						{
+							wchar_t* strfind = wcsstr(WindowTitle, title);   //Ä£ºýÆ¥Åä
+							if (strfind)
+							{
+								if (retstringlen == 0)
+									retstringlen = wcslen(retstring);
+								if (retstringlen > 1)
+									swprintf(retstring, L"%s,%d", retstring, p);
+								else
+									swprintf(retstring, L"%d", p);
+								bret = true;
+							}
+						}
+						HWND hchile = ::GetWindow(p, GW_CHILD);
+						if (hchile != NULL)
+						{
+							FindChildWnd(hchile, title, NULL, retstring, true);
 						}
 					}
 				}
@@ -961,6 +1190,36 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 						if (hchile != NULL)
 						{
 							FindChildWnd(hchile, NULL, class_name, retstring, true, false, process_name);
+						}
+					}
+				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						wchar_t WindowClassName[MAX_PATH] = { 0 };
+						::GetClassName(p, WindowClassName, MAX_PATH);
+						if (wcslen(WindowClassName) > 1)
+						{
+							wchar_t* strfind = wcsstr(WindowClassName, class_name);   //Ä£ºýÆ¥Åä
+							if (strfind)
+							{
+								if (retstringlen == 0)
+									retstringlen = wcslen(retstring);
+								if (retstringlen > 1)
+									swprintf(retstring, L"%s,%d", retstring, p);
+								else
+									swprintf(retstring, L"%d", p);
+								bret = true;
+							}
+						}
+
+						HWND hchile = ::GetWindow(p, GW_CHILD);
+						if (hchile != NULL)
+						{
+							FindChildWnd(hchile, NULL, class_name, retstring, true);
 						}
 					}
 				}
@@ -1039,6 +1298,38 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 						}
 					}
 				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						wchar_t WindowClassName[MAX_PATH] = { 0 };
+						::GetClassName(p, WindowClassName, MAX_PATH);
+						wchar_t WindowTitle[MAX_PATH] = { 0 };
+						::GetWindowText(p, WindowTitle, MAX_PATH);
+						if (wcslen(WindowClassName) > 1 && wcslen(WindowTitle) > 1)
+						{
+							wchar_t* strfindclass = wcsstr(WindowClassName, class_name);   //Ä£ºýÆ¥Åä
+							wchar_t* strfindtitle = wcsstr(WindowTitle, title);   //Ä£ºýÆ¥Åä
+							if (strfindclass && strfindtitle)
+							{
+								if (retstringlen == 0)
+									retstringlen = wcslen(retstring);
+								if (retstringlen > 1)
+									swprintf(retstring, L"%s,%d", retstring, p);
+								else
+									swprintf(retstring, L"%d", p);
+								bret = true;
+							}
+						}
+						HWND hchile = ::GetWindow(p, GW_CHILD);
+						if (hchile != NULL)
+						{
+							FindChildWnd(hchile, title, class_name, retstring, true);
+						}
+					}
+				}
 				else
 				{
 					wchar_t WindowClassName[MAX_PATH] = { 0 };
@@ -1110,7 +1401,21 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 								FindChildWnd(hchile, NULL, NULL, retstring, true, false, process_name);
 							}
 						}
-
+					}
+				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						if (retstringlen == 0)
+							retstringlen = wcslen(retstring);
+						if (retstringlen > 1)
+							swprintf(retstring, L"%s,%d", retstring, p);
+						else
+							swprintf(retstring, L"%d", p);
+						bret = true;
 					}
 				}
 				else
@@ -1179,6 +1484,30 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 							}
 						}
 
+					}
+				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						wchar_t WindowTitle[MAX_PATH] = { 0 };
+						::GetWindowText(p, WindowTitle, MAX_PATH);
+						if (wcslen(WindowTitle) > 1)
+						{
+							wchar_t* strfind = wcsstr(WindowTitle, title);   //Ä£ºýÆ¥Åä
+							if (strfind)
+							{
+								if (retstringlen == 0)
+									retstringlen = wcslen(retstring);
+								if (retstringlen > 1)
+									swprintf(retstring, L"%s,%d", retstring, p);
+								else
+									swprintf(retstring, L"%d", p);
+								bret = true;
+							}
+						}
 					}
 				}
 				else
@@ -1257,6 +1586,30 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 							}
 						}
 
+					}
+				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						wchar_t WindowClassName[MAX_PATH] = { 0 };
+						::GetClassName(p, WindowClassName, MAX_PATH);
+						if (wcslen(WindowClassName) > 1)
+						{
+							wchar_t* strfind = wcsstr(WindowClassName, class_name);   //Ä£ºýÆ¥Åä
+							if (strfind)
+							{
+								if (retstringlen == 0)
+									retstringlen = wcslen(retstring);
+								if (retstringlen > 1)
+									swprintf(retstring, L"%s,%d", retstring, p);
+								else
+									swprintf(retstring, L"%d", p);
+								bret = true;
+							}
+						}
 					}
 				}
 				else
@@ -1339,6 +1692,33 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 
 					}
 				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						wchar_t WindowClassName[MAX_PATH] = { 0 };
+						::GetClassName(p, WindowClassName, MAX_PATH);
+						wchar_t WindowTitle[MAX_PATH] = { 0 };
+						::GetWindowText(p, WindowTitle, MAX_PATH);
+						if (wcslen(WindowClassName) > 1 && wcslen(WindowTitle) > 1)
+						{
+							wchar_t* strfindclass = wcsstr(WindowClassName, class_name);   //Ä£ºýÆ¥Åä
+							wchar_t* strfindtitle = wcsstr(WindowTitle, title);   //Ä£ºýÆ¥Åä
+							if (strfindclass && strfindtitle)
+							{
+								if (retstringlen == 0)
+									retstringlen = wcslen(retstring);
+								if (retstringlen > 1)
+									swprintf(retstring, L"%s,%d", retstring, p);
+								else
+									swprintf(retstring, L"%d", p);
+								bret = true;
+							}
+						}
+					}
+				}
 				else
 				{
 					wchar_t WindowClassName[MAX_PATH] = { 0 };
@@ -1392,6 +1772,26 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 						if (hchile != NULL)
 						{
 							FindChildWnd(hchile, NULL, NULL, retstring, false, true, process_name);
+						}
+					}
+				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						if (retstringlen == 0)
+							retstringlen = wcslen(retstring);
+						if (retstringlen > 1)
+							swprintf(retstring, L"%s,%d", retstring, p);
+						else
+							swprintf(retstring, L"%d", p);
+						bret = true;
+						HWND hchile = ::GetWindow(p, GW_CHILD);
+						if (hchile != NULL)
+						{
+							FindChildWnd(hchile, NULL, NULL, retstring, false, true);
 						}
 					}
 				}
@@ -1451,6 +1851,35 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 						if (hchile != NULL)
 						{
 							FindChildWnd(hchile, title, NULL, retstring, false, true, process_name);
+						}
+					}
+				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						wchar_t WindowTitle[MAX_PATH] = { 0 };
+						::GetWindowText(p, WindowTitle, MAX_PATH);
+						if (wcslen(WindowTitle) > 1)
+						{
+							wchar_t* strfind = wcsstr(WindowTitle, title);   //Ä£ºýÆ¥Åä
+							if (strfind)
+							{
+								if (retstringlen == 0)
+									retstringlen = wcslen(retstring);
+								if (retstringlen > 1)
+									swprintf(retstring, L"%s,%d", retstring, p);
+								else
+									swprintf(retstring, L"%d", p);
+								bret = true;
+							}
+						}
+						HWND hchile = ::GetWindow(p, GW_CHILD);
+						if (hchile != NULL)
+						{
+							FindChildWnd(hchile, title, NULL, retstring, false, true);
 						}
 					}
 				}
@@ -1522,6 +1951,35 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 						}
 					}
 				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						wchar_t WindowClassName[MAX_PATH] = { 0 };
+						::GetClassName(p, WindowClassName, MAX_PATH);
+						if (wcslen(WindowClassName) > 1)
+						{
+							wchar_t* strfind = wcsstr(WindowClassName, class_name);   //Ä£ºýÆ¥Åä
+							if (strfind)
+							{
+								if (retstringlen == 0)
+									retstringlen = wcslen(retstring);
+								if (retstringlen > 1)
+									swprintf(retstring, L"%s,%d", retstring, p);
+								else
+									swprintf(retstring, L"%d", p);
+								bret = true;
+							}
+						}
+						HWND hchile = ::GetWindow(p, GW_CHILD);
+						if (hchile != NULL)
+						{
+							FindChildWnd(hchile, NULL, class_name, retstring, false, true);
+						}
+					}
+				}
 				else
 				{
 					wchar_t WindowClassName[MAX_PATH] = { 0 };
@@ -1590,6 +2048,38 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 						if (hchile != NULL)
 						{
 							FindChildWnd(hchile, title, class_name, retstring, false, true, process_name);
+						}
+					}
+				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						wchar_t WindowClassName[MAX_PATH] = { 0 };
+						::GetClassName(p, WindowClassName, MAX_PATH);
+						wchar_t WindowTitle[MAX_PATH] = { 0 };
+						::GetWindowText(p, WindowTitle, MAX_PATH);
+						if (wcslen(WindowClassName) > 1 && wcslen(WindowTitle) > 1)
+						{
+							wchar_t* strfindclass = wcsstr(WindowClassName, class_name);   //Ä£ºýÆ¥Åä
+							wchar_t* strfindtitle = wcsstr(WindowTitle, title);   //Ä£ºýÆ¥Åä
+							if (strfindclass && strfindtitle)
+							{
+								if (retstringlen == 0)
+									retstringlen = wcslen(retstring);
+								if (retstringlen > 1)
+									swprintf(retstring, L"%s,%d", retstring, p);
+								else
+									swprintf(retstring, L"%d", p);
+								bret = true;
+							}
+						}
+						HWND hchile = ::GetWindow(p, GW_CHILD);
+						if (hchile != NULL)
+						{
+							FindChildWnd(hchile, title, class_name, retstring, false, true);
 						}
 					}
 				}
@@ -1667,6 +2157,21 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 
 					}
 				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						if (retstringlen == 0)
+							retstringlen = wcslen(retstring);
+						if (retstringlen > 1)
+							swprintf(retstring, L"%s,%d", retstring, p);
+						else
+							swprintf(retstring, L"%d", p);
+						bret = true;
+					}
+				}
 				else
 				{
 					if (retstringlen == 0)
@@ -1733,6 +2238,30 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 							}
 						}
 
+					}
+				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						wchar_t WindowTitle[MAX_PATH] = { 0 };
+						::GetWindowText(p, WindowTitle, MAX_PATH);
+						if (wcslen(WindowTitle) > 1)
+						{
+							wchar_t* strfind = wcsstr(WindowTitle, title);   //Ä£ºýÆ¥Åä
+							if (strfind)
+							{
+								if (retstringlen == 0)
+									retstringlen = wcslen(retstring);
+								if (retstringlen > 1)
+									swprintf(retstring, L"%s,%d", retstring, p);
+								else
+									swprintf(retstring, L"%d", p);
+								bret = true;
+							}
+						}
 					}
 				}
 				else
@@ -1810,6 +2339,30 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 							}
 						}
 
+					}
+				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						wchar_t WindowClassName[MAX_PATH] = { 0 };
+						::GetClassName(p, WindowClassName, MAX_PATH);
+						if (wcslen(WindowClassName) > 1)
+						{
+							wchar_t* strfind = wcsstr(WindowClassName, class_name);   //Ä£ºýÆ¥Åä
+							if (strfind)
+							{
+								if (retstringlen == 0)
+									retstringlen = wcslen(retstring);
+								if (retstringlen > 1)
+									swprintf(retstring, L"%s,%d", retstring, p);
+								else
+									swprintf(retstring, L"%d", p);
+								bret = true;
+							}
+						}
 					}
 				}
 				else
@@ -1892,6 +2445,33 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 
 					}
 				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						wchar_t WindowClassName[MAX_PATH] = { 0 };
+						::GetClassName(p, WindowClassName, MAX_PATH);
+						wchar_t WindowTitle[MAX_PATH] = { 0 };
+						::GetWindowText(p, WindowTitle, MAX_PATH);
+						if (wcslen(WindowClassName) > 1 && wcslen(WindowTitle) > 1)
+						{
+							wchar_t* strfindclass = wcsstr(WindowClassName, class_name);   //Ä£ºýÆ¥Åä
+							wchar_t* strfindtitle = wcsstr(WindowTitle, title);   //Ä£ºýÆ¥Åä
+							if (strfindclass && strfindtitle)
+							{
+								if (retstringlen == 0)
+									retstringlen = wcslen(retstring);
+								if (retstringlen > 1)
+									swprintf(retstring, L"%s,%d", retstring, p);
+								else
+									swprintf(retstring, L"%d", p);
+								bret = true;
+							}
+						}
+					}
+				}
 				else
 				{
 					wchar_t WindowClassName[MAX_PATH] = { 0 };
@@ -1944,6 +2524,27 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 						if (hchile != NULL)
 						{
 							FindChildWnd(hchile, NULL, NULL, retstring, true, true, process_name);
+						}
+					}
+				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						if (retstringlen == 0)
+							retstringlen = wcslen(retstring);
+						if (retstringlen > 1)
+							swprintf(retstring, L"%s,%d", retstring, p);
+						else
+							swprintf(retstring, L"%d", p);
+						bret = true;
+
+						HWND hchile = ::GetWindow(p, GW_CHILD);
+						if (hchile != NULL)
+						{
+							FindChildWnd(hchile, NULL, NULL, retstring, true, true);
 						}
 					}
 				}
@@ -2004,6 +2605,35 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 						if (hchile != NULL)
 						{
 							FindChildWnd(hchile, title, NULL, retstring, true, true, process_name);
+						}
+					}
+				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						wchar_t WindowTitle[MAX_PATH] = { 0 };
+						::GetWindowText(p, WindowTitle, MAX_PATH);
+						if (wcslen(WindowTitle) > 1)
+						{
+							wchar_t* strfind = wcsstr(WindowTitle, title);   //Ä£ºýÆ¥Åä
+							if (strfind)
+							{
+								if (retstringlen == 0)
+									retstringlen = wcslen(retstring);
+								if (retstringlen > 1)
+									swprintf(retstring, L"%s,%d", retstring, p);
+								else
+									swprintf(retstring, L"%d", p);
+								bret = true;
+							}
+						}
+						HWND hchile = ::GetWindow(p, GW_CHILD);
+						if (hchile != NULL)
+						{
+							FindChildWnd(hchile, title, NULL, retstring, true, true);
 						}
 					}
 				}
@@ -2075,6 +2705,35 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 						}
 					}
 				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						wchar_t WindowClassName[MAX_PATH] = { 0 };
+						::GetClassName(p, WindowClassName, MAX_PATH);
+						if (wcslen(WindowClassName) > 1)
+						{
+							wchar_t* strfind = wcsstr(WindowClassName, class_name);   //Ä£ºýÆ¥Åä
+							if (strfind)
+							{
+								if (retstringlen == 0)
+									retstringlen = wcslen(retstring);
+								if (retstringlen > 1)
+									swprintf(retstring, L"%s,%d", retstring, p);
+								else
+									swprintf(retstring, L"%d", p);
+								bret = true;
+							}
+						}
+						HWND hchile = ::GetWindow(p, GW_CHILD);
+						if (hchile != NULL)
+						{
+							FindChildWnd(hchile, NULL, class_name, retstring, true, true);
+						}
+					}
+				}
 				else
 				{
 					wchar_t WindowClassName[MAX_PATH] = { 0 };
@@ -2143,6 +2802,38 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 						if (hchile != NULL)
 						{
 							FindChildWnd(hchile, title, class_name, retstring, true, true, process_name);
+						}
+					}
+				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						wchar_t WindowClassName[MAX_PATH] = { 0 };
+						::GetClassName(p, WindowClassName, MAX_PATH);
+						wchar_t WindowTitle[MAX_PATH] = { 0 };
+						::GetWindowText(p, WindowTitle, MAX_PATH);
+						if (wcslen(WindowClassName) > 1 && wcslen(WindowTitle) > 1)
+						{
+							wchar_t* strfindclass = wcsstr(WindowClassName, class_name);   //Ä£ºýÆ¥Åä
+							wchar_t* strfindtitle = wcsstr(WindowTitle, title);   //Ä£ºýÆ¥Åä
+							if (strfindclass && strfindtitle)
+							{
+								if (retstringlen == 0)
+									retstringlen = wcslen(retstring);
+								if (retstringlen > 1)
+									swprintf(retstring, L"%s,%d", retstring, p);
+								else
+									swprintf(retstring, L"%d", p);
+								bret = true;
+							}
+						}
+						HWND hchile = ::GetWindow(p, GW_CHILD);
+						if (hchile != NULL)
+						{
+							FindChildWnd(hchile, title, class_name, retstring, true, true);
 						}
 					}
 				}
@@ -2221,6 +2912,21 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 
 					}
 				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						if (retstringlen == 0)
+							retstringlen = wcslen(retstring);
+						if (retstringlen > 1)
+							swprintf(retstring, L"%s,%d", retstring, p);
+						else
+							swprintf(retstring, L"%d", p);
+						bret = true;
+					}
+				}
 				else
 				{
 					if (retstringlen == 0)
@@ -2288,6 +2994,30 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 							}
 						}
 
+					}
+				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						wchar_t WindowTitle[MAX_PATH] = { 0 };
+						::GetWindowText(p, WindowTitle, MAX_PATH);
+						if (wcslen(WindowTitle) > 1)
+						{
+							wchar_t* strfind = wcsstr(WindowTitle, title);   //Ä£ºýÆ¥Åä
+							if (strfind)
+							{
+								if (retstringlen == 0)
+									retstringlen = wcslen(retstring);
+								if (retstringlen > 1)
+									swprintf(retstring, L"%s,%d", retstring, p);
+								else
+									swprintf(retstring, L"%d", p);
+								bret = true;
+							}
+						}
 					}
 				}
 				else
@@ -2365,6 +3095,30 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 							}
 						}
 
+					}
+				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						wchar_t WindowClassName[MAX_PATH] = { 0 };
+						::GetClassName(p, WindowClassName, MAX_PATH);
+						if (wcslen(WindowClassName) > 1)
+						{
+							wchar_t* strfind = wcsstr(WindowClassName, class_name);   //Ä£ºýÆ¥Åä
+							if (strfind)
+							{
+								if (retstringlen == 0)
+									retstringlen = wcslen(retstring);
+								if (retstringlen > 1)
+									swprintf(retstring, L"%s,%d", retstring, p);
+								else
+									swprintf(retstring, L"%d", p);
+								bret = true;
+							}
+						}
 					}
 				}
 				else
@@ -2445,6 +3199,33 @@ bool WinApi::EnumWindow(HWND parent, const wchar_t *title, const wchar_t *class_
 							}
 						}
 
+					}
+				}
+				else if (process_id)
+				{
+					DWORD pid = 0;
+					GetWindowThreadProcessId(p, &pid);
+					if (pid == process_id)
+					{
+						wchar_t WindowClassName[MAX_PATH] = { 0 };
+						::GetClassName(p, WindowClassName, MAX_PATH);
+						wchar_t WindowTitle[MAX_PATH] = { 0 };
+						::GetWindowText(p, WindowTitle, MAX_PATH);
+						if (wcslen(WindowClassName) > 1 && wcslen(WindowTitle) > 1)
+						{
+							wchar_t* strfindclass = wcsstr(WindowClassName, class_name);   //Ä£ºýÆ¥Åä
+							wchar_t* strfindtitle = wcsstr(WindowTitle, title);   //Ä£ºýÆ¥Åä
+							if (strfindclass && strfindtitle)
+							{
+								if (retstringlen == 0)
+									retstringlen = wcslen(retstring);
+								if (retstringlen > 1)
+									swprintf(retstring, L"%s,%d", retstring, p);
+								else
+									swprintf(retstring, L"%d", p);
+								bret = true;
+							}
+						}
 					}
 				}
 				else
