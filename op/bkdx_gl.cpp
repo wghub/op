@@ -31,72 +31,87 @@ bkdo::~bkdo()
 
 long bkdo::BindEx(HWND hwnd, long render_type) {
 	_hwnd = hwnd;
-	if (render_type == RDT_GL_NOX)
-		return BindNox(hwnd, render_type);
-	_render_type = render_type;
-	RECT rc;
-	//获取客户区大小
-	::GetClientRect(hwnd, &rc);
-	_width = rc.right - rc.left;
-	_height = rc.bottom - rc.top;
-	//bind_init();
-	if (render_type == RDT_GL_NOX) {
-	}
-	DWORD id;
-	::GetWindowThreadProcessId(_hwnd, &id);
-
-
-
-	//attach 进程
-	blackbone::Process proc;
-	NTSTATUS hr;
-
-	hr = proc.Attach(id);
-
 	long bind_ret = 0;
-	if (NT_SUCCESS(hr)) {
-		wstring dllname = g_op_name;
-		//检查是否与插件相同的32/64位,如果不同，则使用另一种dll
-		BOOL is64 = proc.modules().GetMainModule()->type == blackbone::eModType::mt_mod64;
-		if (is64 != OP64) {
-			dllname = is64 ? L"op_x64.dll" : L"op_x86.dll";
+	if (render_type == RDT_GL_NOX) {
+		bind_ret = BindNox(hwnd, render_type);
+	}else{
+		_render_type = render_type;
+		RECT rc;
+		//获取客户区大小
+		::GetClientRect(hwnd, &rc);
+		_width = rc.right - rc.left;
+		_height = rc.bottom - rc.top;
+		//bind_init();
+		if (render_type == RDT_GL_NOX) {
 		}
+		DWORD id;
+		::GetWindowThreadProcessId(_hwnd, &id);
 
-		bool injected = false;
-		//判断是否已经注入
-		auto _dllptr = proc.modules().GetModule(dllname);
-		auto mods = proc.modules().GetAllModules();
-		if (_dllptr) {
-			injected = true;
-		}
-		else {
-			auto iret = proc.modules().Inject(m_opPath + L"\\" + dllname);
-			injected = (iret ? true : false);
-		}
-		if (injected) {
-			using my_func_t = long(__stdcall*)(HWND, int);
-			auto pSetXHook = blackbone::MakeRemoteFunction<my_func_t>(proc, dllname, "SetXHook");
-			if (pSetXHook) {
-				auto cret = pSetXHook(hwnd, render_type);
-				bind_ret = cret.result();
+
+
+		//attach 进程
+		blackbone::Process proc;
+		NTSTATUS hr;
+
+		hr = proc.Attach(id);
+
+
+		if (NT_SUCCESS(hr)) {
+			wstring dllname = g_op_name;
+			//检查是否与插件相同的32/64位,如果不同，则使用另一种dll
+			BOOL is64 = proc.modules().GetMainModule()->type == blackbone::eModType::mt_mod64;
+			if (is64 != OP64) {
+				dllname = is64 ? L"op_x64.dll" : L"op_x86.dll";
+			}
+
+			bool injected = false;
+			//判断是否已经注入
+			auto _dllptr = proc.modules().GetModule(dllname);
+			auto mods = proc.modules().GetAllModules();
+			if (_dllptr) {
+				injected = true;
 			}
 			else {
-				setlog(L"remote function not found.");
+				wstring opFile = m_opPath + L"\\" + dllname;
+				if (::PathFileExistsW(opFile.data())) {
+					auto iret = proc.modules().Inject(opFile);
+					injected = (iret ? true : false);
+				}
+				else {
+					setlog(L"file:<%s> not exists!", opFile.data());
+				}
+
+			}
+			if (injected) {
+				using my_func_t = long(__stdcall*)(HWND, int);
+				auto pSetXHook = blackbone::MakeRemoteFunction<my_func_t>(proc, dllname, "SetXHook");
+				if (pSetXHook) {
+					auto cret = pSetXHook(hwnd, render_type);
+					bind_ret = cret.result();
+				}
+				else {
+					setlog(L"remote function not found.");
+				}
+			}
+			else {
+				setlog(L"Inject false.");
 			}
 		}
 		else {
-			setlog(L"Inject false.");
+			setlog(L"attach false.");
 		}
-
-
-
-
+		proc.Detach();
 	}
-	else {
-		setlog(L"attach false.");
+	
+	if (bind_ret == -1) {
+		setlog("UnknownError");
 	}
-	proc.Detach();
-
+	else if (bind_ret == -2) {
+		setlog("NotSupportedError");
+	}
+	else if (bind_ret == -3) {
+		setlog("ModuleNotFoundError");
+	}
 	return bind_ret;
 }
 //long bkdo::UnBind(HWND hwnd) {
@@ -115,7 +130,7 @@ long bkdo::UnBindEx() {
 	//attach 进程s
 	blackbone::Process proc;
 	NTSTATUS hr;
-
+	//setlog("bkdo::Attach");
 	hr = proc.Attach(id);
 
 	if (NT_SUCCESS(hr)) {
@@ -125,11 +140,13 @@ long bkdo::UnBindEx() {
 		if (is64 != OP64) {
 			dllname = is64 ? L"op_x64.dll" : L"op_x86.dll";
 		}
+		//setlog(L"bkdo::dllname=%s",dllname);
 		using my_func_t = long(__stdcall*)(void);
 		auto pUnXHook = blackbone::MakeRemoteFunction<my_func_t>(proc, dllname, "UnXHook");
 		if (pUnXHook) {
+			//setlog(L"bkdo::pUnXHook");
 			pUnXHook();
-			BOOL fret = ::FreeLibrary((HMODULE)proc.modules().GetModule(dllname)->baseAddress);
+			//BOOL fret = ::FreeLibrary((HMODULE)proc.modules().GetModule(dllname)->baseAddress);
 			//if (!fret)setlog("fret=%d", fret);
 			/*proc.modules().RemoveManualModule(dllname,
 				is64 ? blackbone::eModType::mt_mod64 : blackbone::eModType::mt_mod32);*/
@@ -141,7 +158,7 @@ long bkdo::UnBindEx() {
 	else {
 		setlog("blackbone::MakeRemoteFunction false,errcode:%X,pid=%d,hwnd=%d", hr, id, _hwnd);
 	}
-
+	//setlog(L"bkdo::Detach");
 	proc.Detach();
 	//bind_release();
 	return 1;
@@ -161,7 +178,7 @@ long bkdo::BindNox(HWND hwnd, long render_type) {
 
 	//attach 进程
 	blackbone::Process proc;
-	NTSTATUS hr;
+	NTSTATUS hr = -1;
 
 
 	wstring dllname = L"op_x64.dll";
@@ -181,8 +198,14 @@ long bkdo::BindNox(HWND hwnd, long render_type) {
 			injected = true;
 		}
 		else {
-			auto iret = proc.modules().Inject(m_opPath + L"\\" + dllname);
-			injected = (iret ? true : false);
+			wstring opFile = m_opPath + L"\\" + dllname;
+			if (::PathFileExistsW(opFile.data())) {
+				auto iret = proc.modules().Inject(opFile);
+				injected = (iret ? true : false);
+			}
+			else {
+				setlog(L"file:<%s> not exists!", opFile.data());
+			}
 		}
 		if (injected) {
 			using my_func_t = long(__stdcall*)(HWND, int);
@@ -226,7 +249,7 @@ long bkdo::UnBindNox() {
 		using my_func_t = long(__stdcall*)(void);
 		auto pUnXHook = blackbone::MakeRemoteFunction<my_func_t>(proc, dllname, "UnXHook");
 		if (pUnXHook) {
-			//pUnXHook();
+			pUnXHook();
 
 			/*BOOL fret = ::FreeLibrary((HMODULE)proc.modules().GetModule(dllname)->baseAddress);
 			if (!fret)setlog("fret=%d", fret);*/

@@ -108,8 +108,10 @@ long  libop::GetBasePath(std::wstring& path){
 	wchar_t basepath[1024];
 	::GetModuleFileName(gInstance, basepath, 1024);
 	path = basepath;
-	int index = path.rfind(L'\\');
-	path = path.substr(0, index);
+	size_t index = path.rfind(L'\\');
+	if (index != std::wstring::npos) {
+		path = path.substr(0, index);
+	}
 	return S_OK;
 }
 
@@ -145,10 +147,15 @@ long  libop::InjectDll(const wchar_t* process_name, const wchar_t* dll_name, lon
 	FindWindowByProcess(process_name, L"", L"", &hwnd);
 	long pid;
 	GetWindowProcessId(hwnd, &pid);
-	Injecter::EnablePrivilege(TRUE);
-	long error_code = 0;
-	auto h = Injecter::InjectDll(pid, dll_name,error_code);
 	*ret = 0;
+	if (Injecter::EnablePrivilege(TRUE)) {
+		long error_code = 0;
+		*ret = Injecter::InjectDll(pid, dll_name, error_code);
+	}
+	else {
+		setlog("EnablePrivilege false erro_code=%08X ", ::GetLastError());
+	}
+
 	return S_OK;
 }
 
@@ -349,7 +356,7 @@ long  libop::GetSpecialWindow(long flag, long* rethwnd)
 long  libop::GetWindow(long hwnd, long flag, long* nret)
 {
 	// TODO: 在此添加实现代码
-	_winapi->TSGetWindow(hwnd, flag, *nret);
+	_winapi->GetWindow(hwnd, flag, *nret);
 	return S_OK;
 }
 
@@ -854,12 +861,15 @@ long libop::GetScreenData(long x1, long y1, long x2, long y2, void** data, long*
 	auto& img = _image_proc->_src;
 	if (_bkproc->check_bind() && _bkproc->RectConvert(x1, y1, x2, y2)) {
 		if (!_bkproc->requestCapture(x1, y1, x2 - x1, y2 - y1, _image_proc->_src)) {
-			setlog("error equestCapture");
+			setlog("error requestCapture");
 			return S_OK;
 		}
 		_image_proc->set_offset(x1, y1);
 		_screenData.resize(img.size()*4);
-		memcpy(_screenData.data(), img.pdata, img.size()*4);
+		//memcpy(_screenData.data(), img.pdata, img.size()*4);
+		for (int i = 0; i < img.height; i++) {
+			memcpy(_screenData.data() + i * img.width * 4, img.ptr<char>(img.height - 1 - i), img.width * 4);
+		}
 		*data = _screenData.data(); *ret = 1;
 	}
 	return 0;
@@ -870,7 +880,7 @@ long libop::GetScreenDataBmp(long x1, long y1, long x2, long y2, void** data, lo
 	*ret = 0;
 	if (_bkproc->check_bind() && _bkproc->RectConvert(x1, y1, x2, y2)) {
 		if (!_bkproc->requestCapture(x1, y1, x2 - x1, y2 - y1, _image_proc->_src)) {
-			setlog("error equestCapture");
+			setlog("rerror equestCapture");
 			return S_OK;
 		}
 		_image_proc->set_offset(x1, y1);
@@ -886,7 +896,8 @@ long libop::GetScreenDataBmp(long x1, long y1, long x2, long y2, void** data, lo
 
 		bih.biBitCount = 32;//每个像素字节大小
 		bih.biCompression = BI_RGB;
-		bih.biHeight = -img.height;//高度
+		//bih.biHeight = -img.height;//高度 反
+		bih.biHeight = img.height;//高度
 		bih.biPlanes = 1;
 		bih.biSize = sizeof(BITMAPINFOHEADER);
 		bih.biSizeImage = img.width * 4 * img.height;//图像数据大小
@@ -906,8 +917,12 @@ long libop::GetScreenDataBmp(long x1, long y1, long x2, long y2, void** data, lo
 		
 		memcpy(dst, &bfh,sizeof(bfh));
 		memcpy(dst +sizeof(bfh), &bih, sizeof(bih));
-		memcpy(dst + sizeof(bfh)+sizeof(bih), img.pdata, img.size()*4);
-		*data = dst;
+		dst += sizeof(bfh) + sizeof(bih);
+		for (int i = 0; i < img.height; i++) {
+			memcpy(dst  + i * img.width * 4, img.ptr<char>(img.height - 1 - i), img.width * 4);
+		}
+		//memcpy(dst + sizeof(bfh)+sizeof(bih), img.pdata, img.size()*4);
+		*data = _screenDataBmp.data();
 		*size = bfh.bfSize;
 		*ret = 1;
 	}

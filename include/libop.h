@@ -24,7 +24,8 @@ using bytearray = std::vector<unsigned char>;
 #endif
 #endif
 // libop
-
+#undef FindWindow
+#undef FindWindowEx
 class OP_API libop{
 public:
 	libop();
